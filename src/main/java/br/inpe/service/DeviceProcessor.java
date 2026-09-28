@@ -2,6 +2,7 @@ package br.inpe.service;
 
 import br.inpe.dto.DevicePayloadDTO;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.JsonNode;
 import jakarta.enterprise.context.ApplicationScoped;
 import org.eclipse.microprofile.config.inject.ConfigProperty;
 
@@ -36,10 +37,11 @@ public class DeviceProcessor {
             throw new IOException("O serviço remoto retornou HTTP " + response.statusCode());
         }
 
-        try {
-            return Integer.parseInt(response.body().trim());
-        } catch (NumberFormatException exception) {
-            throw new IOException("O serviço remoto não retornou um inteiro válido", exception);
+        JsonNode responseBody = objectMapper.readTree(response.body());
+        JsonNode data = responseBody == null ? null : responseBody.get("data");
+        if (data == null || !data.isIntegralNumber() || !data.canConvertToInt()) {
+            throw new IOException("O serviço remoto não retornou um campo 'data' inteiro válido");
         }
+        return data.intValue();
     }
 }

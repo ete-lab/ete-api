@@ -19,7 +19,9 @@ public class LocalDeviceProcessor implements QuarkusTestResourceLifecycleManager
             server = HttpServer.create(new InetSocketAddress("127.0.0.1", 0), 0);
             server.createContext("/", exchange -> {
                 receivedBody = new String(exchange.getRequestBody().readAllBytes(), StandardCharsets.UTF_8);
-                byte[] response = "42".getBytes(StandardCharsets.UTF_8);
+                byte[] response = """
+                    {"status":"status","comando":"comando","mensagem":"mensagem","data":42,"qx":0}
+                    """.getBytes(StandardCharsets.UTF_8);
                 exchange.getResponseHeaders().set("Content-Type", "application/json");
                 exchange.sendResponseHeaders(200, response.length);
                 exchange.getResponseBody().write(response);

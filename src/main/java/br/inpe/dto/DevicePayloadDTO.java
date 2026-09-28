@@ -40,5 +40,5 @@ public record DevicePayloadDTO(
     @Max(value = 65535, message = "O valor máximo para dataword é 65535")
     @NotNull(message = "O campo dataword não pode ser nulo")
     @JsonProperty("dataword")
-    Long dataword
+    Integer dataword
 ) {}
