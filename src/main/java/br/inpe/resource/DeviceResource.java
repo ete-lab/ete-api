@@ -1,6 +1,7 @@
 package br.inpe.resource;
 
 import br.inpe.dto.DevicePayloadDTO;
+import br.inpe.dto.ResponseAPIDTO;
 import br.inpe.service.DeviceProcessor;
 import java.io.IOException;
 import java.util.Map;
@@ -22,16 +23,19 @@ public class DeviceResource {
 
     private static final DevicePayloadDTO REGISTRO_PAYLOAD =
             new DevicePayloadDTO(0, 0, 9, 0, 0, 0);
-    private static int register = 0;
+    //private static int register = 0;
 
     @Inject
     DeviceProcessor deviceProcessor;
 
     
     @GET
-    public int registro() {
+    public Response registro() {
         try {
-            return deviceProcessor.process(REGISTRO_PAYLOAD);
+            ResponseAPIDTO result =deviceProcessor.process(REGISTRO_PAYLOAD);
+            return Response.status(Response.Status.OK)
+                    .entity(result)
+                    .build();
         } catch (IOException | InterruptedException exception) {
             if (exception instanceof InterruptedException) {
                 Thread.currentThread().interrupt();
@@ -46,7 +50,7 @@ public class DeviceResource {
     @POST
     public Response processData(@Valid DevicePayloadDTO payload) {
         try {
-            int result = deviceProcessor.process(payload);
+            ResponseAPIDTO result = deviceProcessor.process(payload);
             return Response.status(Response.Status.CREATED)
                     .entity(result)
                     .build();

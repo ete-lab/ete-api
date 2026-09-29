@@ -1,8 +1,13 @@
 package br.inpe.service;
 
 import br.inpe.dto.DevicePayloadDTO;
+import br.inpe.dto.ResponseAPIDTO;
+
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.core.exc.StreamReadException;
+import com.fasterxml.jackson.databind.DatabindException;
+import com.fasterxml.jackson.databind.JsonMappingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.databind.JsonNode;
 import jakarta.enterprise.context.ApplicationScoped;
 import org.eclipse.microprofile.config.inject.ConfigProperty;
 
@@ -18,13 +23,15 @@ public class DeviceProcessor {
 
     private final HttpClient httpClient = HttpClient.newHttpClient();
 
-    @ConfigProperty(name = "device.processor.url", defaultValue = "http://150.163.5.83:8080/")
+    @ConfigProperty(name = "device.processor.url")
     String processorUrl;
 
     @jakarta.inject.Inject
     ObjectMapper objectMapper;
 
-    public int process(DevicePayloadDTO payload) throws IOException, InterruptedException {
+    ResponseAPIDTO responseBody;
+
+    public ResponseAPIDTO process(DevicePayloadDTO payload) throws IOException, InterruptedException {
         String requestBody = objectMapper.writeValueAsString(payload);
         HttpRequest request = HttpRequest.newBuilder(URI.create(processorUrl))
                 .timeout(Duration.ofSeconds(5))
@@ -37,11 +44,26 @@ public class DeviceProcessor {
             throw new IOException("O serviço remoto retornou HTTP " + response.statusCode());
         }
 
-        JsonNode responseBody = objectMapper.readTree(response.body());
-        JsonNode data = responseBody == null ? null : responseBody.get("data");
-        if (data == null || !data.isIntegralNumber() || !data.canConvertToInt()) {
+        try {
+            responseBody = objectMapper.readValue(response.body(), ResponseAPIDTO.class);
+        } catch (JsonMappingException e) {
+            throw new IOException("Erro ao mapear o JSON para ResponseAPIDTO: " + e.getMessage());
+        } catch (StreamReadException e) {
+            throw new IOException("Erro ao ler o fluxo de dados JSON: " + e.getMessage());
+        } catch (DatabindException e) {
+            throw new IOException("Erro ao vincular os dados JSON: " + e.getMessage());
+        } catch (JsonProcessingException e) {
+            throw new IOException("Erro ao processar o JSON: " + e.getMessage());
+        } catch (Exception e) {
+            throw new IOException("Erro inesperado ao processar a resposta JSON: " + e.getMessage());
+        }
+        
+        if (responseBody.data() == null) {
             throw new IOException("O serviço remoto não retornou um campo 'data' inteiro válido");
         }
-        return data.intValue();
+        if(responseBody.qx() > 3) {
+            throw new IOException("Houve um erro de comunicação com o CAMAC. Código de erro: " + responseBody.qx());
+        }
+        return responseBody;
     }
 }
