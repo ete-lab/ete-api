@@ -79,6 +79,14 @@
 #
 # You can find more information about the UBI base runtime images and their configuration here:
 # https://rh-openjdk.github.io/redhat-openjdk-containers/
+#1 - Fazer login
+#   sudo docker login
+#2 - renomear a imagem
+#   sudo docker tag arnaldosena/ete-api:latest arnaldosena/ete-api:1.0.0 (sudo docker tag sua-imagem:tag seu-usuario-dockerhub/nome-do-repositorio:tag)
+#3 - Enviar para docker hub
+#   sudo docker push arnaldosena/ete-api:1.0.0
+#executar container
+#   sudo docker run -d --name rele -p 8088:8088 --add-host=host.docker.internal:host-gateway arnaldosena/ete-api:latest
 ###
 FROM eclipse-temurin:25-jre
 
