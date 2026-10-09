@@ -62,7 +62,7 @@ public class DeviceProcessor {
             throw new IOException("O serviço remoto não retornou um campo 'data' inteiro válido");
         }
         if(responseBody.qx() > 3) {
-            throw new IOException("Houve um erro de comunicação com o CAMAC. Código de erro: " + responseBody.qx());
+            throw new IOException("Houve um erro de comunicação com o CAMAC. Código de erro 'qx': " + responseBody.qx());
         }
         return responseBody;
     }

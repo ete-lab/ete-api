@@ -1,10 +1,12 @@
 package br.inpe.dto;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
+import org.eclipse.microprofile.openapi.annotations.media.Schema;
 import jakarta.validation.constraints.Max;
 import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.NotNull;
 
+@Schema(name = "DeviceResponse", description = "Resultado retornado após o processamento do comando pelo dispositivo.")
 public record ResponseAPIDTO(
     @NotNull(message = "O campo data não pode ser nulo")
     @JsonProperty("status") String status,

@@ -1,10 +1,12 @@
 package br.inpe.dto;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
+import org.eclipse.microprofile.openapi.annotations.media.Schema;
 import jakarta.validation.constraints.Max;
 import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.NotNull;
 
+@Schema(name = "DevicePayload", description = "Parâmetros validados para envio de um comando ao dispositivo.")
 public record DevicePayloadDTO(
     @NotNull(message = "O campo branch não pode ser nulo")
     @Min(value = 0, message = "O valor mínimo para branch é 0")
