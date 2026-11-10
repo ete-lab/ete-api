@@ -10,7 +10,6 @@ import com.fasterxml.jackson.databind.JsonMappingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import jakarta.enterprise.context.ApplicationScoped;
 import org.eclipse.microprofile.config.inject.ConfigProperty;
-
 import java.io.IOException;
 import java.net.URI;
 import java.net.http.HttpClient;
