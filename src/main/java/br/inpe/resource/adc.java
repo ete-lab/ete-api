@@ -9,9 +9,7 @@ import org.eclipse.microprofile.openapi.annotations.media.Schema;
 import org.eclipse.microprofile.openapi.annotations.responses.APIResponse;
 import org.eclipse.microprofile.openapi.annotations.tags.Tag;
 import jakarta.ws.rs.Produces;
-import br.inpe.dto.DevicePayloadDTO;
 import br.inpe.dto.DevicePayloadDacDTO;
-import br.inpe.dto.ResponseAPIDTO;
 import br.inpe.dto.ResponseDacDTO;
 import br.inpe.service.DeviceProcessorDac;
 import jakarta.inject.Inject;
@@ -30,8 +28,8 @@ import jakarta.ws.rs.core.Response;
 @Tag(name = "ADC", description = "Operações de leitura e processamento de dados do dispositivo ADC  .")
 public class adc {
 
-    private static final DevicePayloadDTO REGISTRO_PAYLOAD =
-            new DevicePayloadDTO(0, 0, 9, 0, 0, 0);
+        private static final DevicePayloadDacDTO REGISTRO_PAYLOAD =
+            new DevicePayloadDacDTO(0, 0, 9, 0, 1, new Integer[] {0, 0, 0, 0, 0, 0, 0, 0});
     //private static int register = 0;
 
     @Inject
@@ -39,12 +37,12 @@ public class adc {
 
     
     @GET
-    @Operation(summary = "Ler o estado do relé", description = "Envia o comando padrão ao dispositivo e retorna a resposta recebida.")
-    @APIResponse(responseCode = "200", description = "Comando processado com sucesso.", content = @Content(schema = @Schema(implementation = ResponseAPIDTO.class)))
+    @Operation(summary = "Ler dados do ADC", description = "Envia o comando padrão ao dispositivo e retorna os dados recebidos.")
+    @APIResponse(responseCode = "200", description = "Comando processado com sucesso.", content = @Content(schema = @Schema(implementation = ResponseDacDTO.class)))
     @APIResponse(responseCode = "502", description = "Falha ao processar os dados no dispositivo remoto.")
     public Response registro() {
         try {
-            ResponseAPIDTO result =deviceProcessor.process(REGISTRO_PAYLOAD);
+            ResponseDacDTO result = deviceProcessor.process(REGISTRO_PAYLOAD);
             return Response.status(Response.Status.OK)
                     .entity(result)
                     .build();

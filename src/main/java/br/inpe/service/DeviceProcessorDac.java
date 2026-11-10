@@ -6,9 +6,6 @@ import br.inpe.dto.ResponseAPIDTO;
 import br.inpe.dto.ResponseDacDTO;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.core.exc.StreamReadException;
-import com.fasterxml.jackson.databind.DatabindException;
-import com.fasterxml.jackson.databind.JsonMappingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import jakarta.enterprise.context.ApplicationScoped;
 import org.eclipse.microprofile.config.inject.ConfigProperty;
@@ -30,11 +27,55 @@ public class DeviceProcessorDac {
     @jakarta.inject.Inject
     ObjectMapper objectMapper;
 
-    ResponseDacDTO responseBody;
-
     public ResponseDacDTO process(DevicePayloadDacDTO payload) throws IOException, InterruptedException {
-        
-        String requestBody = objectMapper.writeValueAsString(payload);
+        if (payload == null || payload.dataword() == null || payload.dataword().length != 8) {
+            throw new IOException("O payload DAC deve conter exatamente 8 valores de dataword");
+        }
+
+        Integer[] data = new Integer[8];
+        ResponseAPIDTO lastResponse = null;
+
+        for (int i = 0; i < payload.dataword().length; i++) {
+            DevicePayloadDTO singlePayload = new DevicePayloadDTO(
+                    payload.branch(),
+                    payload.crate(),
+                    payload.station(),
+                    payload.subaddress(),
+                    payload.function(),
+                    payload.dataword()[i]);
+            ResponseAPIDTO response = send(singlePayload);
+
+            if (response.data() == null) {
+                throw new IOException("O serviço remoto não retornou um campo 'data' inteiro válido");
+            }
+            if (response.qx() == null || response.qx() > 3) {
+                throw new IOException("Houve um erro de comunicação com o CAMAC. Código de erro 'qx': " + response.qx());
+            }
+
+            data[i] = response.data();
+            lastResponse = response;
+        }
+
+        if (lastResponse == null) {
+            throw new IOException("O serviço remoto não retornou respostas para os datawords");
+        }
+
+        return new ResponseDacDTO(
+                lastResponse.status(),
+                lastResponse.comando(),
+                lastResponse.mensagem(),
+                data,
+                lastResponse.qx());
+    }
+
+    private ResponseAPIDTO send(DevicePayloadDTO payload) throws IOException, InterruptedException {
+        String requestBody;
+        try {
+            requestBody = objectMapper.writeValueAsString(payload);
+        } catch (JsonProcessingException exception) {
+            throw new IOException("Erro ao serializar o payload do dispositivo", exception);
+        }
+
         HttpRequest request = HttpRequest.newBuilder(URI.create(processorUrl))
                 .timeout(Duration.ofSeconds(5))
                 .header("Content-Type", "application/json")
@@ -47,25 +88,9 @@ public class DeviceProcessorDac {
         }
 
         try {
-            responseBody = objectMapper.readValue(response.body(), ResponseDacDTO.class);
-        } catch (JsonMappingException e) {
-            throw new IOException("Erro ao mapear o JSON para ResponseAPIDTO: " + e.getMessage());
-        } catch (StreamReadException e) {
-            throw new IOException("Erro ao ler o fluxo de dados JSON: " + e.getMessage());
-        } catch (DatabindException e) {
-            throw new IOException("Erro ao vincular os dados JSON: " + e.getMessage());
-        } catch (JsonProcessingException e) {
-            throw new IOException("Erro ao processar o JSON: " + e.getMessage());
-        } catch (Exception e) {
-            throw new IOException("Erro inesperado ao processar a resposta JSON: " + e.getMessage());
+            return objectMapper.readValue(response.body(), ResponseAPIDTO.class);
+        } catch (JsonProcessingException exception) {
+            throw new IOException("Erro ao processar a resposta JSON do serviço remoto", exception);
         }
-        
-        if (responseBody.data() == null) {
-            throw new IOException("O serviço remoto não retornou um campo 'data' inteiro válido");
-        }
-        if(responseBody.qx() > 3) {
-            throw new IOException("Houve um erro de comunicação com o CAMAC. Código de erro 'qx': " + responseBody.qx());
-        }
-        return responseBody;
     }
 }
