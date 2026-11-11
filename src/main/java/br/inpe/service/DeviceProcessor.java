@@ -2,7 +2,6 @@ package br.inpe.service;
 
 import br.inpe.dto.DevicePayloadDTO;
 import br.inpe.dto.ResponseAPIDTO;
-
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.core.exc.StreamReadException;
 import com.fasterxml.jackson.databind.DatabindException;
