@@ -21,7 +21,7 @@ class GreetingResourceTest {
     @Test
     void testHelloEndpoint() {
         given()
-          .when().get("/hello")
+          .when().get("/up")
           .then()
              .statusCode(200)
              .contentType(MediaType.TEXT_PLAIN)
@@ -29,13 +29,15 @@ class GreetingResourceTest {
     }
 
     @Test
-    void testHealfEndpoint() {
+    void testHealthEndpoint() {
         given()
-          .when().get("/hello/healf")
+          .when().get("/up/health")
           .then()
              .statusCode(200)
              .contentType(MediaType.TEXT_PLAIN)
-             .body(is("Testing"));
+             .body(is("Socket url em DEVICE_PROCESSOR_URL\": http://host.docker.internal:8080\n" + //
+                                  "Socket url em prod: null\n" + //
+                                  "Socket url: em devnull"));
     }
 
 }

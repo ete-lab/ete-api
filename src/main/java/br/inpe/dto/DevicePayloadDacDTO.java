@@ -5,6 +5,9 @@ import jakarta.validation.constraints.Max;
 import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;
+
+import java.util.List;
+
 import org.eclipse.microprofile.openapi.annotations.media.Schema;
 
 @Schema(name = "DeviceAdcPayload", description = "Parâmetros validados para envio de um comando ao dispositivo ADC.")
@@ -34,7 +37,7 @@ public record DevicePayloadDacDTO(
     Integer subaddress,
 
     @NotNull(message = "O campo function não pode ser nulo")
-    @Min(value = 1, message = "O valor mínimo para function é 1")
+    @Min(value = 0, message = "O valor mínimo para function é 0")
     @Max(value = 30, message = "O valor máximo para function é 30")
     @JsonProperty("function")
     Integer function,
@@ -42,6 +45,9 @@ public record DevicePayloadDacDTO(
     @NotNull(message = "O campo dataword não pode ser nulo")
     @Size(min = 8, max = 8, message = "O campo dataword deve conter exatamente 8 inteiros")
     @JsonProperty("dataword")
-    java.lang.@Min(value = 0, message = "Cada valor de dataword deve ser no mínimo 0")
-    @Max(value = 65535, message = "Cada valor de dataword deve ser no máximo 65535") Integer[] dataword
+    List<
+        @Min(value = 0, message = "Cada valor de dataword deve ser no mínimo 0")
+        @Max(value = 1023, message = "Cada valor de dataword deve ser no máximo 1023")
+    Integer> dataword
+
 ) {}

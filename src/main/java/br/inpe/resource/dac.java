@@ -21,15 +21,17 @@ import jakarta.ws.rs.Path;
 import jakarta.ws.rs.WebApplicationException;
 import jakarta.ws.rs.core.MediaType;
 import jakarta.ws.rs.core.Response;
+import java.util.ArrayList;
+import java.util.List;
 
-@Path("/adc")
+@Path("/dac")
 @Produces(MediaType.APPLICATION_JSON)
 @Consumes(MediaType.APPLICATION_JSON)
-@Tag(name = "ADC", description = "Operações de leitura e processamento de dados do dispositivo ADC  .")
-public class adc {
+@Tag(name = "DAC", description = "Operações de leitura e processamento de dados do dispositivo DAC  .")
+public class dac {
 
-        private static final DevicePayloadDacDTO REGISTRO_PAYLOAD =
-            new DevicePayloadDacDTO(0, 0, 9, 0, 1, new Integer[] {0, 0, 0, 0, 0, 0, 0, 0});
+    private static final DevicePayloadDacDTO REGISTRO_PAYLOAD =
+            new DevicePayloadDacDTO(0, 0, 9, 0, 1, new ArrayList<Integer>(List.of(0, 0, 0, 0, 0, 0, 0, 0)));
     //private static int register = 0;
 
     @Inject
@@ -37,7 +39,7 @@ public class adc {
 
     
     @GET
-    @Operation(summary = "Ler dados do ADC", description = "Envia o comando padrão ao dispositivo e retorna os dados recebidos.")
+    @Operation(summary = "Ler dados do DAC", description = "Envia o comando padrão ao dispositivo e retorna os dados recebidos.")
     @APIResponse(responseCode = "200", description = "Comando processado com sucesso.", content = @Content(schema = @Schema(implementation = ResponseDacDTO.class)))
     @APIResponse(responseCode = "502", description = "Falha ao processar os dados no dispositivo remoto.")
     public Response registro() {

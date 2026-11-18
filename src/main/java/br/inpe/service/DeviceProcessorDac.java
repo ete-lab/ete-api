@@ -28,21 +28,21 @@ public class DeviceProcessorDac {
     ObjectMapper objectMapper;
 
     public ResponseDacDTO process(DevicePayloadDacDTO payload) throws IOException, InterruptedException {
-        if (payload == null || payload.dataword() == null || payload.dataword().length != 8) {
+        if (payload == null || payload.dataword() == null || payload.dataword().size() != 8) {
             throw new IOException("O payload DAC deve conter exatamente 8 valores de dataword");
         }
 
         Integer[] data = new Integer[8];
         ResponseAPIDTO lastResponse = null;
 
-        for (int i = 0; i < payload.dataword().length; i++) {
+        for (int i = 0; i < payload.dataword().size(); i++) {
             DevicePayloadDTO singlePayload = new DevicePayloadDTO(
                     payload.branch(),
                     payload.crate(),
                     payload.station(),
                     payload.subaddress(),
                     payload.function(),
-                    payload.dataword()[i]);
+                    payload.dataword().get(i));
             ResponseAPIDTO response = send(singlePayload);
 
             if (response.data() == null) {
