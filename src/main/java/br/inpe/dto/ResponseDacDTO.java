@@ -22,10 +22,10 @@ public record ResponseDacDTO(
     @Size(min = 8, max = 8, message = "O campo data deve conter exatamente 8 inteiros")
     @JsonProperty("data")
     java.lang.@Min(value = 0, message = "Cada valor de data deve ser no mínimo 0")
-    @Max(value = 65535, message = "Cada valor de data deve ser no máximo 65535") Integer[] data,
+    @Max(value = 1023, message = "Cada valor de data deve ser no máximo 1023") Integer[] data,
 
     @NotNull(message = "O campo qx não pode ser nulo")
     @Min(value = 0, message = "O valor mínimo para qx é 0")
-    @Max(value = 65535, message = "O valor máximo para qx é 65535")
+    @Max(value = 100, message = "O valor máximo para qx é 100")
     @JsonProperty("qx") Integer qx
 ) {}

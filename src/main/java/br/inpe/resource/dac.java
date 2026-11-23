@@ -10,6 +10,8 @@ import org.eclipse.microprofile.openapi.annotations.responses.APIResponse;
 import org.eclipse.microprofile.openapi.annotations.tags.Tag;
 import jakarta.ws.rs.Produces;
 import br.inpe.dto.DevicePayloadDacDTO;
+import br.inpe.dto.DevicePayloadSingleDTO;
+import br.inpe.dto.ResponseAPIDTO;
 import br.inpe.dto.ResponseDacDTO;
 import br.inpe.service.DeviceProcessorDac;
 import jakarta.inject.Inject;
@@ -44,7 +46,7 @@ public class dac {
     @APIResponse(responseCode = "502", description = "Falha ao processar os dados no dispositivo remoto.")
     public Response registro() {
         try {
-            ResponseDacDTO result = deviceProcessor.process(REGISTRO_PAYLOAD);
+            DevicePayloadDacDTO result = deviceProcessor.process(REGISTRO_PAYLOAD);
             return Response.status(Response.Status.OK)
                     .entity(result)
                     .build();
@@ -66,7 +68,28 @@ public class dac {
     @APIResponse(responseCode = "502", description = "Falha ao processar os dados no dispositivo remoto.")
     public Response processData(@Valid DevicePayloadDacDTO payload) {
         try {
-            ResponseDacDTO result = deviceProcessor.process(payload);
+            DevicePayloadDacDTO result = deviceProcessor.process(payload);
+            return Response.status(Response.Status.CREATED)
+                    .entity(result)
+                    .build();
+        } catch (IOException | InterruptedException exception) {
+            if (exception instanceof InterruptedException) {
+                Thread.currentThread().interrupt();
+            }
+            return Response.status(Response.Status.BAD_GATEWAY)
+                    .entity(Map.of("error", "Falha ao processar dados no dispositivo remoto"))
+                    .build();
+        }
+    }
+
+    @POST
+    @Operation(summary = "Processar comando do dispositivo", description = "Valida e encaminha os parâmetros do comando ao dispositivo remoto.")
+    @APIResponse(responseCode = "201", description = "Comando processado com sucesso.", content = @Content(schema = @Schema(implementation = ResponseDacDTO.class)))
+    @APIResponse(responseCode = "400", description = "Payload inválido ou com erro de desserialização.")
+    @APIResponse(responseCode = "502", description = "Falha ao processar os dados no dispositivo remoto.")
+    public Response processData(@Valid DevicePayloadSingleDTO payload) {
+        try {
+            ResponseAPIDTO result = deviceProcessor.process(payload);
             return Response.status(Response.Status.CREATED)
                     .entity(result)
                     .build();
