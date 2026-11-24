@@ -83,6 +83,7 @@ public class dac {
     }
 
     @POST
+    @Path("/single")
     @Operation(summary = "Processar comando do dispositivo", description = "Valida e encaminha os parâmetros do comando ao dispositivo remoto.")
     @APIResponse(responseCode = "201", description = "Comando processado com sucesso.", content = @Content(schema = @Schema(implementation = ResponseDacDTO.class)))
     @APIResponse(responseCode = "400", description = "Payload inválido ou com erro de desserialização.")

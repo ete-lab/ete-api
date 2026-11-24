@@ -16,7 +16,7 @@ public record DevicePayloadSingleDTO (
 
     @NotNull(message = "O campo dataword não pode ser nulo")
     @Min(value = 0, message = "O valor de dataword deve ser no mínimo 0")
-    @Max(value = 1023, message = "O valor de dataword deve ser no máximo 1023")
+    @Max(value = 8000, message = "O valor de dataword deve ser no máximo 8000")
     @JsonProperty("dataword")
     Integer dataword
 ) implements  DevicePayloadBase {}

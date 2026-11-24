@@ -10,7 +10,7 @@ import java.util.List;
 
 import org.eclipse.microprofile.openapi.annotations.media.Schema;
 
-@Schema(name = "DeviceAdcPayload", description = "Parâmetros validados para envio de um comando ao dispositivo ADC.")
+@Schema(name = "DeviceDacPayload", description = "Parâmetros validados para envio de um comando ao dispositivo DAC.")
 public record DevicePayloadDacDTO(
     Integer branch,
     Integer crate,
@@ -23,7 +23,7 @@ public record DevicePayloadDacDTO(
     @JsonProperty("dataword")
     List<
         @Min(value = 0, message = "Cada valor de dataword deve ser no mínimo 0")
-        @Max(value = 1023, message = "Cada valor de dataword deve ser no máximo 1023")
+        @Max(value = 8000, message = "Cada valor de dataword deve ser no máximo 8000")
     Integer> dataword
 
 ) implements DevicePayloadBase {}

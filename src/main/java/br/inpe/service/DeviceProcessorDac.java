@@ -20,17 +20,26 @@ import java.util.List;
 
 @ApplicationScoped
 public class DeviceProcessorDac {
+    // canal 2 do DAC  = vertical subida
+    // canal 3 do DAC  = vertical patamar
+    // canal 4 do DAC  = toroidal subida
+    // canal 5 do DAC  = toroidal patamar
+    // canal 6 do DAC  = ohmico geração
+    // canal 7 do DAC  = ohmico sustentação
+
 
     private static final int DATAWORD_COUNT = 8;
     
 
     private final HttpClient httpClient = HttpClient.newHttpClient();
 
-    @ConfigProperty(name = "device.processor.url")
+    @ConfigProperty(name = "device.processor.url", defaultValue = "http://150.163.5.8:8080")
     String processorUrl;
 
-    @ConfigProperty(name = "dac.dataword.maximums", defaultValue = "0,250,4000,200,3000,2000,5000,0")
+    @ConfigProperty(name = "dac.dataword.maximums", defaultValue = "0,1500,250,8000,250,8000,8000,0")
     List<Integer> datawordMaximums;
+    @ConfigProperty(name = "dac.dataword.restrictions", defaultValue = "0,1000,250,4000,250,4000,4000,0")
+    List<Integer> datawordRestrictions;
 
     @jakarta.inject.Inject
     ObjectMapper objectMapper;
@@ -74,29 +83,138 @@ public class DeviceProcessorDac {
                     "A configuração dac.dataword.maximums deve conter exatamente " + DATAWORD_COUNT + " limites."
             );
         }
+        if (datawordRestrictions == null || datawordRestrictions.size() != DATAWORD_COUNT) {
+            throw new IllegalStateException(
+                    "A configuração dac.dataword.restrictions deve conter exatamente " + DATAWORD_COUNT + " limites."
+            );
+        }
+
+        int canal = (datawordMaximums == null || datawordMaximums.isEmpty())
+                ? -1
+                : payload.subaddress();
+        if (canal < 0 || canal >= DATAWORD_COUNT) {
+            throw new IllegalStateException("Canal valido de 0 - 7. Canal inválido: ." + payload.subaddress());
+        }
+
 
         for (int i = 0; i < payload.dataword().size(); i++) {
             Integer value = payload.dataword().get(i);
             Integer maximum = datawordMaximums.get(i);
-
-            if (value == null) {
-                throw new DatawordLimitExceededException("O dataword da posição " + i + " não pode ser nulo.");
-            }
+            Integer restriction = datawordRestrictions != null && datawordRestrictions.size() == DATAWORD_COUNT
+                    ? datawordRestrictions.get(i)
+                    : null;
+            
             if (maximum == null || maximum < 0 ) {
                 throw new IllegalStateException(
-                        "O limite configurado para o dataword da posição " + i
+                        "O limite configurado para a fonte no canal " + (i + 1)
                                 + " deve ser maior que 0 (zero)."
                 );
             }
-            if (value < 0) {
-                throw new DatawordLimitExceededException("O dataword da posição " + i + " deve ser no mínimo 0 volt.");
+
+            if (restriction == null || restriction < 0 ) {
+                throw new IllegalStateException(
+                        "O limite configurado para a fonte no canal " + (i + 1)
+                                + " deve ser maior que 0 (zero)."
+                );
             }
+
+            if (value == null) {
+                throw new DatawordLimitExceededException("O valor do canal " + (i + 1) + " não pode ser nulo.");
+            }
+            
+
+            if (value < 0) {
+                throw new DatawordLimitExceededException("O dataword do canal " + (i + 1) + " deve ser no mínimo 0 volt.");
+            }
+
             if (value > maximum) {
                 throw new DatawordLimitExceededException(
-                        "O dataword da posição " + i + " excede o máximo permitido de " + maximum + " volts."
+                        "O valor do canal " + (i + 1) + " excede o máximo permitido do fabricante: " + maximum + " volts."
+                );
+            }
+
+            if (restriction == null || restriction < 0) {
+                throw new DatawordLimitExceededException("O limite configurado para o canal " + (i + 1) + " não pode ser nulo e nem negativo.");
+            }
+
+            if (restriction != null && value > restriction) {
+                throw new DatawordLimitExceededException(
+                    "O valor " + value + " do canal " + (i + 1) + " excede o limite configurado pela equipe: " + restriction + " volts."
                 );
             }
         }
+    }
+
+    private void validateDatawords(DevicePayloadSingleDTO payload) {
+        if (payload == null || payload.dataword() == null) {
+            throw new DatawordLimitExceededException(
+                    "O payload DAC deve conter exatamente 1(um) valor para o canal de saída (dataword)."
+            );
+        }
+        if (datawordMaximums == null || datawordMaximums.size() != DATAWORD_COUNT) {
+            throw new IllegalStateException(
+                    "A configuração dac.dataword.maximums deve conter exatamente " + DATAWORD_COUNT + " limites."
+            );
+        }
+        if (datawordRestrictions == null || datawordRestrictions.size() != DATAWORD_COUNT) {
+            throw new IllegalStateException(
+                    "A configuração dac.dataword.restrictions deve conter exatamente " + DATAWORD_COUNT + " limites."
+            );
+        }
+        //para ambos
+        int canal = (datawordMaximums.isEmpty())
+                ? -1
+                : payload.subaddress();
+
+        if (canal < 0 || canal >= DATAWORD_COUNT) {
+            throw new IllegalStateException("Canal valido de 0 - 7. Canal inválido: ." + payload.subaddress());
+        }
+
+        Integer value = payload.dataword();
+        Integer maximum = datawordMaximums.get(payload.subaddress());
+        Integer restriction = datawordRestrictions.get(payload.subaddress());
+
+       
+        
+        if (maximum == null || maximum < 0 ) {
+            throw new IllegalStateException(
+                    "O limite configurado para a fonte no canal " + (canal + 1)
+                            + " deve ser maior que 0 (zero)."
+            );
+        }
+
+        if (restriction == null || restriction < 0 ) {
+            throw new IllegalStateException(
+                    "O limite configurado para a fonte no canal " + (canal + 1)
+                            + " deve ser maior que 0 (zero)."
+            );
+        }
+
+        if (value == null) {
+            throw new DatawordLimitExceededException("O valor do canal " + (canal + 1) + " não pode ser nulo.");
+        }
+        
+
+        if (value < 0) {
+            throw new DatawordLimitExceededException("O dataword do canal " + (canal + 1) + " deve ser no mínimo 0 volt.");
+        }
+
+        if (value > maximum) {
+            throw new DatawordLimitExceededException(
+                    "O valor do canal " + (canal + 1) + " excede o máximo permitido do fabricante: " + maximum + " volts."
+            );
+        }
+
+        if (restriction == null || restriction < 0) {
+            throw new DatawordLimitExceededException("O limite configurado para o canal " + (canal + 1) + " não pode ser nulo e nem negativo.");
+        }
+
+        if (restriction != null && value > restriction) {
+            throw new DatawordLimitExceededException(
+                "O valor " + value + " do canal " + (canal + 1) + " excede o limite configurado pela equipe: " + restriction + " volts."
+            );
+        }
+        
     }
 
     private ResponseAPIDTO send(DevicePayloadSingleDTO payload) throws IOException, InterruptedException {
@@ -126,27 +244,29 @@ public class DeviceProcessorDac {
     }
     
     public ResponseAPIDTO process(DevicePayloadSingleDTO payload) throws IOException, InterruptedException {
-        if (payload == null || payload.dataword() == null) {
-            throw new DatawordLimitExceededException("O payload e o dataword não podem ser nulos.");
-        }
+
+        validateDatawords(payload);
+
+        ResponseAPIDTO response = send(payload);
         
-        int maximum = (datawordMaximums == null || datawordMaximums.isEmpty())
-                ? -1
-                : datawordMaximums.get(payload.subaddress() != null && payload.subaddress() >= 0 && payload.subaddress() < datawordMaximums.size()
-                    ? payload.subaddress()
-                    : 0);
-
-        if (maximum < 0 ) {
-            throw new IllegalStateException("O limite configurado deve ser maior que 0 .");
-        }
-        if (payload.dataword() < 0) {
-            throw new DatawordLimitExceededException("O dataword deve ser no mínimo 0 volt.");
-        }
-        if (payload.dataword() > maximum) {
-            throw new DatawordLimitExceededException("O dataword excede o máximo permitido de " + maximum + ".");
+        if (response.data() == null) {
+                throw new IOException("O serviço remoto não retornou um campo 'data' inteiro válido");
         }
 
-        return send(payload);
+        if (response.qx() == null || response.qx() > 3) {
+                throw new IOException("Houve um erro de comunicação com o CAMAC. Código de erro 'qx': " + response.qx());
+        }
+
+        DevicePayloadSingleDTO updatedPayload = new DevicePayloadSingleDTO(
+            payload.branch(),
+            payload.crate(),
+            payload.station(),
+            payload.subaddress(),
+            payload.function(),
+            response.data()
+        );
+        return send(updatedPayload);
+
     }
 
     public static class DatawordLimitExceededException extends IllegalArgumentException {
