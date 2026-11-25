@@ -48,14 +48,14 @@ public class DeviceProcessorDac {
 
         validateDatawords(payload);
 
-        for (int i = 0; i < payload.dataword().size(); i++) {
+        for (int subaddress = 0; subaddress < payload.dataword().size(); subaddress++) {
             DevicePayloadSingleDTO singlePayload = new DevicePayloadSingleDTO(
                     payload.branch(),
                     payload.crate(),
                     payload.station(),
-                    payload.subaddress(),
+                    subaddress,
                     payload.function(),
-                    payload.dataword().get(i)
+                    payload.dataword().get(subaddress)
             );
             ResponseAPIDTO response = send(singlePayload);
 
@@ -66,7 +66,7 @@ public class DeviceProcessorDac {
                 throw new IOException("Houve um erro de comunicação com o CAMAC. Código de erro 'qx': " + response.qx());
             }
 
-            payload.dataword().set(i, response.data());
+            payload.dataword().set(subaddress, response.data());
         }
 
         return payload;
@@ -219,6 +219,7 @@ public class DeviceProcessorDac {
 
     private ResponseAPIDTO send(DevicePayloadSingleDTO payload) throws IOException, InterruptedException {
         String requestBody;
+        int valorRegistrador = 
         try {
             requestBody = objectMapper.writeValueAsString(payload);
         } catch (JsonProcessingException exception) {

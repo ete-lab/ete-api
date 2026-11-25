@@ -33,7 +33,7 @@ import java.util.List;
 public class dac {
 
     private static final DevicePayloadDacDTO REGISTRO_PAYLOAD =
-            new DevicePayloadDacDTO(0, 0, 9, 0, 1, new ArrayList<Integer>(List.of(0, 0, 0, 0, 0, 0, 0, 0)));
+            new DevicePayloadDacDTO(0, 0, 7, 0, 0, new ArrayList<Integer>(List.of(0, 0, 0, 0, 0, 0, 0, 0)));
     //private static int register = 0;
 
     @Inject
@@ -58,7 +58,7 @@ public class dac {
                     Response.status(Response.Status.BAD_GATEWAY)
                             .entity(Map.of("error", "Falha ao processar dados no dispositivo remoto"))
                             .build());
-        }
+        } 
     }
 
     @POST
@@ -68,6 +68,7 @@ public class dac {
     @APIResponse(responseCode = "502", description = "Falha ao processar os dados no dispositivo remoto.")
     public Response processData(@Valid DevicePayloadDacDTO payload) {
         try {
+            
             DevicePayloadDacDTO result = deviceProcessor.process(payload);
             return Response.status(Response.Status.CREATED)
                     .entity(result)
